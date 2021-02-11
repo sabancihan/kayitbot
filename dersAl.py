@@ -6,20 +6,23 @@ import smtplib
 from email.mime.text import MIMEText
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-xpathStringDersAl = "/html/body/div[3]/table[1]/tr[2]/td/table/tr[2]/td[3]" 
+xpathStringDersAl = "/html/body/div[3]/table[1]/tr[2]/td/table/tr[2]/td[3]"
 xpathStringDersEkle = "/html/body/div[3]/form/table[contains(@summary,'Error')]"
-mail = "erhanb"
 s = requests.session()
 sifre = ""
 kullanıcıAdı = ""
 
-gmailBot = "sukayitbot@gmail.com"
-gmailBotSifre = "kayitkayit"
+
+
+
+
+gmailBot = "kayitbotsu@gmail.com"
+gmailBotSifre = "botbotkayit"
 
 
 data = {
-    		
-		"term_in": "202001",
+
+                "term_in": "",
         "RSTS_IN":["DUMMY","RW","RW","RW","RW","RW","RW","RW","RW","RW","RW"],
         "assoc_term_in":["DUMMY","","","","","","","","","",""],
         "CRN_IN":["DUMMY","","","","","","","","","",""],
@@ -37,10 +40,11 @@ data = {
         "regs_row":"0",
         "wait_row":"0",
         "add_row":"10",
-	}
+        }
 
 
-def dersCrnListesiAl():
+def dersCrnListesiAl(_donem):
+    data["term_in"] = _donem
     eklenilcekDerslerCrn = []
     while(True):
         dersCrnları = input("Ekleyeceginiz ders crnını yazıp entera basın bağlı ders girecekseniz araya virgul koyun  (q ile ders eklemeyi bitirebilirsiniz): ")
@@ -51,15 +55,15 @@ def dersCrnListesiAl():
 def bosDersListesiDon(eklenilcekDerslerCrn,donem):
     threads= []
     bosDersListesi = []
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=12) as executor:
         for bagliDersler in eklenilcekDerslerCrn:
             threads.append(executor.submit(bagliDerslerBosmu,bagliDersler,donem))
         for task in as_completed(threads):
             result = task.result()
             if(result[0]):
-                print("{} dersi boş".format(result[1][0]))
+                print("{} dersi boş".format(result[1]))
                 bosDersListesi.extend(result[1])
-    
+
     return bosDersListesi
 
 
@@ -86,8 +90,8 @@ def girisYap():
         sifre = getpass.getpass("Sifrenizi girin: ")
 
     s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_SabanciLogin")
-    anaSayfa = s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
-    return anaSayfa.url
+    s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
+
 
 
 
@@ -102,17 +106,17 @@ def smtpBaglan():
     mailLib.starttls()
     mailLib.login(gmailBot,gmailBotSifre)
     return mailLib
-                
+
 
 def Kaydol(donem,eklenilcekDerslerCrn):
-    
-    print(girisYap())
-    
+
+    girisYap()
+
     mailLib = smtpBaglan()
-    tamEmail = mail + "@sabanciuniv.edu"
+    tamEmail = kullanıcıAdı + "@sabanciuniv.edu"
 
     while(len(eklenilcekDerslerCrn) > 0):
-        bosDersler = bosDersListesiDon(eklenilcekDerslerCrn,donem)  
+        bosDersler = bosDersListesiDon(eklenilcekDerslerCrn,donem)
         if(len(bosDersler) > 0):
             index = 1
             for bosDers in bosDersler:
@@ -120,14 +124,14 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                 index += 1
 
 
-                
+
 
             while(True):
                 dersEkleSayfa = s.post('https://suis.sabanciuniv.edu/prod/su_registration.p_su_register', data=data)
                 if(dersEkleSayfa.url == "https://suis.sabanciuniv.edu/prod/su_registration.p_su_register"):
                     break
                 girisYap()
-                time.sleep(31)
+                time.sleep(30)
 
 
             data["CRN_IN"] = ["DUMMY","","","","","","","","","",""]
@@ -139,6 +143,7 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
             tree = html.fromstring(dersEkleSayfa.text)
             errorPath = tree.xpath(xpathStringDersEkle)
+
 
             if(errorPath):
                 errorInfos = errorPath[0]
@@ -157,7 +162,7 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                         dersKaldir(eklenilcekDerslerCrn,crn)
 
                     bosDersler.remove(crn)
-                
+
                 msg = MIMEText(butunHatalar)
                 msg["Subject"] = "Bazı dersler eklenirken hata olustu"
                 mailLib = smtpBaglan()
@@ -168,7 +173,7 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
 
             #Eklenmis dersleri printle
-           
+
             butunEklenenler = ""
             for ders in bosDersler:
                 dersEkleMesaj = "{} CRN li ders eklendi".format(ders)
@@ -187,13 +192,7 @@ def Kaydol(donem,eklenilcekDerslerCrn):
             #Eklenmis dersleri Eklenilcek dersler listesinden cıkar
 
             eklenilcekDerslerCrn = [ders for ders in eklenilcekDerslerCrn if ders not in bosDersler]
-    
-
-    mailLib.close()            
 
 
-    
-    
-    
+    mailLib.close()
 
-    
