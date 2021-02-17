@@ -90,7 +90,8 @@ def girisYap():
         sifre = getpass.getpass("Sifrenizi girin: ")
 
     s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_SabanciLogin")
-    s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
+    page = s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
+    return page.url
 
 
 
@@ -110,7 +111,8 @@ def smtpBaglan():
 
 def Kaydol(donem,eklenilcekDerslerCrn):
 
-    girisYap()
+    url = girisYap()
+    print(url)
 
     mailLib = smtpBaglan()
     tamEmail = kullanıcıAdı + "@sabanciuniv.edu"
@@ -127,10 +129,10 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
 
             while(True):
+                girisYap()
                 dersEkleSayfa = s.post('https://suis.sabanciuniv.edu/prod/su_registration.p_su_register', data=data)
                 if(dersEkleSayfa.url == "https://suis.sabanciuniv.edu/prod/su_registration.p_su_register"):
                     break
-                girisYap()
                 time.sleep(30)
 
 
@@ -162,14 +164,15 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                         dersKaldir(eklenilcekDerslerCrn,crn)
 
                     bosDersler.remove(crn)
-
-                msg = MIMEText(butunHatalar)
-                msg["Subject"] = "Bazı dersler eklenirken hata olustu"
-                mailLib = smtpBaglan()
-                try:
-                    mailLib.sendmail(gmailBot,tamEmail,msg.as_string())
-                except:
-                    pass
+                
+                if butunHatalar:
+                    msg = MIMEText(butunHatalar)
+                    msg["Subject"] = "Bazı dersler eklenirken hata olustu"
+                    mailLib = smtpBaglan()
+                    try:
+                        mailLib.sendmail(gmailBot,tamEmail,msg.as_string())
+                    except:
+                        pass
 
 
             #Eklenmis dersleri printle
