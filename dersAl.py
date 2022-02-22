@@ -2,22 +2,17 @@ import requests
 from lxml import html
 import getpass
 import time
-import smtplib
-from email.mime.text import MIMEText
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import yagmail
 
 xpathStringDersAl = "/html/body/div[3]/table[1]/tr[2]/td/table/tr[2]/td[3]"
 xpathStringDersEkle = "/html/body/div[3]/form/table[contains(@summary,'Error')]"
 s = requests.session()
 sifre = ""
 kullanıcıAdı = ""
+password = "qzcwoochncmqalbc"
 
 
-
-
-
-gmailBot = "kayitbotsu@gmail.com"
-gmailBotSifre = "botbotkayit"
 
 
 data = {
@@ -41,6 +36,20 @@ data = {
         "wait_row":"0",
         "add_row":"10",
         }
+
+
+def mailAt(email,topic,description):
+    user = 'kayitbotsu@gmail.com'
+    app_password = password  # a token for gmail
+    to = email
+
+    subject = topic
+    content = [description]
+
+    with yagmail.SMTP(user, app_password) as yag:
+        yag.send(to, subject, content)
+        print('Sent email successfully')
+
 
 
 def dersCrnListesiAl(_donem):
@@ -102,11 +111,6 @@ def dersKaldir(eklenilcekDerslerCrn,crn):
             eklenilcekDerslerCrn.remove(bagliDersler)
 
 
-def smtpBaglan():
-    mailLib = smtplib.SMTP("smtp.gmail.com",587)
-    mailLib.starttls()
-    mailLib.login(gmailBot,gmailBotSifre)
-    return mailLib
 
 
 def Kaydol(donem,eklenilcekDerslerCrn):
@@ -114,7 +118,6 @@ def Kaydol(donem,eklenilcekDerslerCrn):
     url = girisYap()
     print(url)
 
-    mailLib = smtpBaglan()
     tamEmail = kullanıcıAdı + "@sabanciuniv.edu"
 
     while(len(eklenilcekDerslerCrn) > 0):
@@ -166,11 +169,8 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                     bosDersler.remove(crn)
                 
                 if butunHatalar:
-                    msg = MIMEText(butunHatalar)
-                    msg["Subject"] = "Bazı dersler eklenirken hata olustu"
-                    mailLib = smtpBaglan()
                     try:
-                        mailLib.sendmail(gmailBot,tamEmail,msg.as_string())
+                        mailAt(tamEmail,"Bazı dersler eklenirken hata olustu",butunHatalar)
                     except:
                         pass
 
@@ -184,11 +184,10 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                 butunEklenenler += dersEkleMesaj + "\n"
                 dersKaldir(eklenilcekDerslerCrn,ders)
             if(butunEklenenler):
-                msg = MIMEText(butunEklenenler)
-                msg["Subject"] = "Bazı dersler başarıyla eklendi"
-                mailLib = smtpBaglan()
+                mailAt(tamEmail,"Bazı dersler başarıyla eklendi",butunEklenenler)
+
                 try:
-                    mailLib.sendmail(gmailBot,tamEmail,msg.as_string())
+                    mailAt(tamEmail,"Bazı dersler başarıyla eklendi",butunEklenenler)
                 except:
                     pass
 
@@ -197,5 +196,4 @@ def Kaydol(donem,eklenilcekDerslerCrn):
             eklenilcekDerslerCrn = [ders for ders in eklenilcekDerslerCrn if ders not in bosDersler]
 
 
-    mailLib.close()
 
