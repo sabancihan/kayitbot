@@ -84,13 +84,18 @@ def bagliDerslerBosmu(bagliDersler,donem):
 
 def dersBosmu(donem,dersCrn):
     dersAramaUrl = "https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in={}&crn_in={}".format(donem,dersCrn)
-    dersSayfasi =  requests.get(dersAramaUrl)
-    tree = html.fromstring(dersSayfasi.text)
-    path = tree.xpath(xpathStringDersAl)
-    if len(path) > 0:
-        kalanKontejyan = (int)(path[0].text)
-        return kalanKontejyan > 0
-    return False
+    try:
+        dersSayfasi =  requests.get(dersAramaUrl)
+        print(dersSayfasi.status_code)
+        if dersSayfasi.status_code == 200:
+            tree = html.fromstring(dersSayfasi.text)
+            path = tree.xpath(xpathStringDersAl)
+            if len(path) > 0:
+                kalanKontejyan = (int)(path[0].text)
+                return kalanKontejyan > 0
+        return False
+    except requests.ConnectionError:
+        return False
 
 
 def girisYap():
@@ -101,9 +106,12 @@ def girisYap():
         kullanıcıAdı = input("Kullanıcı Adınızı girin: ")
         sifre = getpass.getpass("Sifrenizi girin: ")
 
-    s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_SabanciLogin")
-    page = s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
-    return page.url
+    try:
+        s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_SabanciLogin")
+        page = s.get("https://suis.sabanciuniv.edu/prod/twbkwbis.P_ValLogin?sid={}&PIN={}".format(kullanıcıAdı,sifre))
+        return page.url
+    except requests.ConnectionError:
+        print("Baglanti hatası")
 
 
 
@@ -135,11 +143,15 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
 
             while(True):
-                girisYap()
-                dersEkleSayfa = s.post('https://suis.sabanciuniv.edu/prod/su_registration.p_su_register', data=data)
-                if(dersEkleSayfa.url == "https://suis.sabanciuniv.edu/prod/su_registration.p_su_register"):
-                    break
-                time.sleep(30)
+                try:
+                    girisYap()
+                    dersEkleSayfa = s.post('https://suis.sabanciuniv.edu/prod/su_registration.p_su_register', data=data)
+                    if(dersEkleSayfa.url == "https://suis.sabanciuniv.edu/prod/su_registration.p_su_register"):
+                        break
+                except requests.ConnectionError:
+                    print("Daha fazla baglanti hatasi")
+                finally:
+                    time.sleep(30)
 
 
             data["CRN_IN"] = ["DUMMY","","","","","","","","","",""]
