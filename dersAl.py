@@ -86,7 +86,6 @@ def dersBosmu(donem,dersCrn):
     dersAramaUrl = "https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in={}&crn_in={}".format(donem,dersCrn)
     try:
         dersSayfasi =  requests.get(dersAramaUrl)
-        print(dersSayfasi.status_code)
         if dersSayfasi.status_code == 200:
             tree = html.fromstring(dersSayfasi.text)
             path = tree.xpath(xpathStringDersAl)
