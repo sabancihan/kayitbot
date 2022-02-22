@@ -45,10 +45,12 @@ def mailAt(email,topic,description):
 
     subject = topic
     content = [description]
-
-    with yagmail.SMTP(user, app_password) as yag:
-        yag.send(to, subject, content)
-        print('Sent email successfully')
+    try:
+        with yagmail.SMTP(user, app_password) as yag:
+            yag.send(to, subject, content)
+            print('Sent email successfully')
+    except:
+        print("Mail sorun çıktıgından dolayı gönderilemedi")
 
 
 
@@ -211,3 +213,4 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
 
 
+mailAt("a@b.com","b",["c"])
