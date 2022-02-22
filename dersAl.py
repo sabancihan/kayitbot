@@ -86,8 +86,11 @@ def dersBosmu(donem,dersCrn):
     dersAramaUrl = "https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in={}&crn_in={}".format(donem,dersCrn)
     dersSayfasi =  requests.get(dersAramaUrl)
     tree = html.fromstring(dersSayfasi.text)
-    kalanKontejyan = (int)(tree.xpath(xpathStringDersAl)[0].text)
-    return kalanKontejyan > 0
+    path = tree.xpath(xpathStringDersAl)
+    if len(path) > 0:
+        kalanKontejyan = (int)(path[0].text)
+        return kalanKontejyan > 0
+    return False
 
 
 def girisYap():
