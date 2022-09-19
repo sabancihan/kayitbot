@@ -10,7 +10,7 @@ xpathStringDersEkle = "/html/body/div[3]/form/table[contains(@summary,'Error')]"
 s = requests.session()
 sifre = ""
 kullanıcıAdı = ""
-password = "qzcwoochncmqalbc"
+password = "bisiler"
 
 
 
@@ -48,7 +48,7 @@ def mailAt(email,topic,description):
     try:
         with yagmail.SMTP(user, app_password) as yag:
             yag.send(to, subject, content)
-            print('Sent email successfully')
+            print('Mail başarıyla gönderildi')
     except:
         print("Mail sorun çıktıgından dolayı gönderilemedi")
 
@@ -200,7 +200,6 @@ def Kaydol(donem,eklenilcekDerslerCrn):
                 butunEklenenler += dersEkleMesaj + "\n"
                 dersKaldir(eklenilcekDerslerCrn,ders)
             if(butunEklenenler):
-                mailAt(tamEmail,"Bazı dersler başarıyla eklendi",butunEklenenler)
 
                 try:
                     mailAt(tamEmail,"Bazı dersler başarıyla eklendi",butunEklenenler)
@@ -212,5 +211,3 @@ def Kaydol(donem,eklenilcekDerslerCrn):
             eklenilcekDerslerCrn = [ders for ders in eklenilcekDerslerCrn if ders not in bosDersler]
 
 
-
-mailAt("a@b.com","b",["c"])
