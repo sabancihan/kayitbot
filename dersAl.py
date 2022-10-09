@@ -1,3 +1,4 @@
+from asyncio import constants
 import requests
 from lxml import html
 import getpass
@@ -5,8 +6,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import yagmail
 
-xpathStringDersAl = "/html/body/div[3]/table[1]/tr[2]/td/table/tr[2]/td[3]"
-xpathStringDersEkle = "/html/body/div[3]/form/table[contains(@summary,'Error')]"
+xpathStringDersAl = "//td[contains(@class,'dddefault')]"
+xpathStringDersEkle = "//table[contains(@summary,'Error')]"
+xpathStringInfoText = "//span[contains(@class,'infotext')]/text()"
 s = requests.session()
 sifre = ""
 kullanıcıAdı = ""
@@ -92,7 +94,7 @@ def dersBosmu(donem,dersCrn):
             tree = html.fromstring(dersSayfasi.text)
             path = tree.xpath(xpathStringDersAl)
             if len(path) > 0:
-                kalanKontejyan = (int)(path[0].text)
+                kalanKontejyan = (int)(path[3].text)
                 return kalanKontejyan > 0
         return False
     except requests.ConnectionError:
@@ -134,6 +136,7 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
     while(len(eklenilcekDerslerCrn) > 0):
         bosDersler = bosDersListesiDon(eklenilcekDerslerCrn,donem)
+        print(bosDersler)
         if(len(bosDersler) > 0):
             index = 1
             for bosDers in bosDersler:
@@ -163,8 +166,16 @@ def Kaydol(donem,eklenilcekDerslerCrn):
 
 
             tree = html.fromstring(dersEkleSayfa.text)
+            infoPath = tree.xpath(xpathStringInfoText)
             errorPath = tree.xpath(xpathStringDersEkle)
 
+
+   
+
+
+            if (infoPath and "Term not available" in  infoPath[0]):
+                time.sleep(30)
+                continue
 
             if(errorPath):
                 errorInfos = errorPath[0]
